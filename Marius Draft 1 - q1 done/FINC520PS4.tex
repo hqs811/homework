@@ -1,0 +1,126 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{csvsimple}
+\usepackage{listings}
+%\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}  % mcode.sty Needs To Be in .tex directory!!
+\usepackage{csvsimple}
+%\usepackage[cm]{fullpage}
+
+\title{FINC 520: Time Series \\
+	Problem Set \#4}
+\author{Qiushi Huang \\
+	   Marius Ring }
+	   
+	   
+\begin{document}
+\maketitle
+%\date{}							% Activate to display a given date or no date
+
+\section{Question 1}
+
+\subsection{part (a)}
+
+We can rewrite the GARCH(1,1) as
+
+\begin{align} \epsilon_t^2 = \omega + (\alpha+\beta) \epsilon_{t-1}^2 - \beta v_{t-1} + v_t \end{align}
+\begin{align} v_t =  \epsilon_t^2-\sigma_t^2 = (z_t^2-1)\sigma_2^2 \end{align}
+\begin{align} z_t \ \sim \mathrm{I.I.D.} \ \mathrm{N}(0,1) \end{align}
+
+We find that
+\begin{align} \mu \equiv \mathbb{E}\epsilon_t^2=\frac{\omega}{1-\alpha-\beta} \end{align}
+
+Thus we may write
+\begin{align} \epsilon_t^2 -\mu = (\alpha+\beta)( \epsilon_{t-1}^2 -\mu) - \beta v_{t-1} + v_t \end{align}
+
+
+Then we use the Yule-Walker (not White-Walker as in Game of Thrones!!) method to find the autocorrelations for $\epsilon_t^2$, which will be the same as those of $y_t^2$ under our assumption.
+
+The first autocorrelation:
+\begin{align} \rho_1= \frac{\alpha(1-\alpha\beta-\beta^2)}{1-2\alpha\beta-\beta^2} \end{align}
+
+Which provides us with all the subsequent ones due to p=q=1 in the GARCH(p,q):
+\begin{align} \rho_k= (\alpha+\beta)^{k-1}\rho_1 \end{align}
+
+\subsection{ part(b)}
+
+The heteroskedasticity consistent estimator for the asymptotic covariance matrix is 
+\begin{align} \hat V = \hat Q^{-1} \Omega \hat Q^{-1} \end{align}
+
+where
+\begin{align} \hat \Omega = \frac{1}{T} \sum \hat \epsilon_t^2 y_{t-1}^2 \end{align}
+\begin{align} \hat Q= \ \frac{1}{T} \sum y_{t-1}^2 \end{align}
+
+We will have that 
+\begin{align} \sqrt{T}(\hat \phi - \phi) \rightarrow  N(0,Q^{-1}\Omega Q^{-1}) \mathrm{ \ in \ distribution.}\end{align}
+
+Where we can, asymptotically, replace $Q^{-1}\Omega Q^{-1}$ with $\hat V$.
+
+\begin{align} \Omega = \mathrm{plim} \frac{1}{T} \sum \hat \epsilon_t^2 y_{t-1}^2 = \mathbb{E}\epsilon_t^2 \epsilon_{t-1}^2 = \rho_1 \gamma_0 +\mu^2 \end{align}
+\begin{align} Q= \mathrm{plim}\frac{1}{T} \sum y_{t-1}^2 = \mathbb{E}\epsilon_{t-1}^2=\mu \end{align}
+
+\begin{align} V= \frac{\rho_1\gamma_0+\mu^2}{\mu^2} \end{align}
+
+where
+
+\begin{align} \gamma_0 = 3\omega^2(1+\alpha+\beta)[(1-\alpha-\beta)(1-\beta^2-2\alpha\beta-3\alpha^2)]^{-1} \end{align}
+\begin{align} \mu =\frac{\omega}{1-\alpha-\beta} \end{align}
+\begin{align} \rho_1= \frac{\alpha(1-\alpha\beta-\beta^2)}{1-2\alpha\beta-\beta^2} \end{align}
+
+So in the case where $\alpha=\beta=0$ we have that $\rho_1 \rightarrow 0$ and $V \rightarrow 1$.
+
+Otherwise, it follows from the terms, and our assumptions on $\omega, \alpha,$ and $\beta$ that $\rho_1>0$, and thus 
+\begin{align} V>1 \end{align}
+
+\subsection{ part (c)}
+
+ \centerline{ \csvautotabular{Matlab/PS4Q1c.csv} }
+ 
+ \begin{align} \hat \phi_T = \left(\sum_{t=2}^T y_{t-1}^2 \right)^{-1} \sum_{t=2}^T y_t y_{t-1} \end{align}
+ 
+ The asymptotic variance of  $\sqrt{T} \hat \phi_T$ will just be 1 under our $H_0$, and the assumption that error terms are IID Normal. We see this in part (d): just let $\rho_1=0$.
+ \begin{align} 		\end{align}
+ 
+ In A and B $V=1$ and the IID Normal assumptions on the error term hold, so we would expect to see that that we reject 5\% of the time, which we also do.
+ 
+ IN C and D $V>1$, thus using the IID Normal assumption on the error term, we would be using a variance that is too low, and thus use a test statistic that is too high, and thus reject too often. i.e. \textbf{heteroskedasticity that is unaccounted for increases the size of the test beyond our confidence level.}
+ 
+ 
+ 
+ \subsection{ part (d) information criterions }
+ The 'approximate' log likelihood function for the AR(p) estimation, assuming that the error terms are IID, is this:
+ \begin{align} logL=-\frac{T-p-1}{2}\log(2\pi)-\frac{T-p-1}{2}\log(\sigma^2)-\frac{1}{2} \sum_{t=p+1}^T \frac{\epsilon_t^2}{\sigma^2}
+\end{align}
+ \begin{align} \epsilon_t = y_t - \sum_{j=1}^p \phi_j y_{t-j} \end{align}
+ 
+ \begin{align} \hat \sigma_p^2 = \frac{1}{T-p-1} \sum_{t=p+1}^T  \hat \epsilon_t^2 =\frac{1}{T-p-1} \sum_{t=p+1}^T\left( y_t - \sum_{j=1}^p \hat\phi_j y_{t-j} \right)^2 \end{align}
+ 
+  Thus for our Information Criterion comparisons we use:
+ \begin{align} \log \hat L_p = -\frac{T}{2}\log(\hat\sigma_p^2) \end{align}
+ 
+ Since the first terms with $p$ in the logL above artificially increase the logL due to the nature of the conditional/approximate MLE. Also the third term depends only on $T$ and $p$ when we subsitute in for $\hat\sigma^2$
+ 
+ The ICs are given by:
+ 
+ \begin{align} BIC = -2 \log \hat L_p + p \log(T) = T\log\hat \sigma_p^2 + p \ log(T) \end{align}
+ \begin{align} AIC= -2 \log \hat L_p + 2p = T\log\hat \sigma_p^2 + 2p \end{align}
+
+
+ and $\hat \phi_T$ is our usual OLS estimate, regressing $y_t$ on $y_{t-1},...y_{t-p}$, with no intercept term.
+ 
+ 
+ \subsubsection*{AIC results}
+  \centerline{ \csvautotabular{Matlab/PS4Q1dAIC.csv} }
+   \subsubsection*{BIC results}
+  \centerline{ \csvautotabular{Matlab/PS4Q1dBIC.csv} }
+  
+  From theory we would expect that both AIC and BIC would in the limit never pick a $p$ that was too small, and in the limit BIC will also not pick a $p$ that is too big. We also expected $AIC$ to be 'less conservative', i.e., choosing a higher number of lags, and possibly not be consistent towards the true $p=0$.
+  
+  The simulation results are well aligned with theory. We see that AIC more often than BIC picks too large $p$. We also see as $T\rightarrow 1000$ that BIC is a lot more consistent towards the true $p=1$ than AIC for the setups $G$ and $H$.
+\end{document}  

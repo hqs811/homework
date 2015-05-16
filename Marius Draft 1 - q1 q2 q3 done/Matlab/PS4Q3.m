@@ -1,0 +1,86 @@
+%% PS4Q3
+
+clc, clear all
+
+h=0.1
+omega=0:h:3.1416
+J=length(omega)
+minnn=5
+f_u=zeros(J,1);
+f_c=f_u;
+f_y=f_u;
+for j=1:J
+    f_u(j)= norm(1-0.8*exp(-i*omega(j)))^2*(1/(2*pi));
+    f_c(j)= norm( (1/( 1-0.9*exp(-i*omega(j)) )) )^2*(1/(2*pi));
+    f_y(j)=f_u(j)+f_c(j);
+end
+
+plot(omega(minnn:end),f_u(minnn:end),'r:', ...
+    omega(minnn:end),f_c(minnn:end),'b', ...
+    omega(minnn:end),f_y(minnn:end),'mo'), ...
+    legend('f_u','f_c', 'f_y')
+    title('Spectra')
+Fig=gcf, PlotName='Spectra'
+    FileName=['PS4Q3a.png']
+    set(Fig,'name',PlotName,'numbertitle','off')
+    print ('-dpng',FileName)
+    
+%% part (d) filtering
+clc, clear all
+cd('/users/mariusring/Documents/Northwestern/520 FINC Todorov/PS 4/Matlab')
+y = importdata( 'simyt.asc');
+c = importdata( 'simct.asc');
+T=length(y);
+Order=50;
+c_hat=-99999*ones(length(c),1);
+
+H=(-Order:1:Order)';
+Filter=(1/pi)*sin(H)./H;
+Filter(Order+1)=1;
+
+for t=Order+1:T-Order
+    c_hat(t)=y(t-Order:t+Order)'*Filter;
+end
+
+corr(c(Order+1:T-Order),c_hat(Order+1:T-Order))
+
+Order = 1000 % just for the plot...
+
+plot(Order+1:T-Order,c(Order+1:T-Order),Order+1:T-Order,c_hat(Order+1:T-Order),'r:'),
+    legend('c','c hat'),
+    title('Order=10')
+Fig=gcf, PlotName=''
+    FileName=['PS4Q3c.png'];
+    set(Fig,'name',PlotName,'numbertitle','off');
+    print ('-dpng',FileName);
+
+
+%% part (e) filtering
+ clear all
+cd('/users/mariusring/Documents/Northwestern/520 FINC Todorov/PS 4/Matlab')
+y = importdata( 'simyt.asc');
+c = importdata( 'simct.asc');
+T=length(y);
+Order=10;
+c_hat=-99999*ones(length(c),1);
+
+H=(-Order:1:Order)';
+Filter=(1/pi)*sin(H)./H;
+Filter(Order+1)=1;
+
+for t=Order+1:T-Order
+    c_hat(t)=y(t-Order:t+Order)'*Filter;
+end
+
+corr(c(Order+1:T-Order),c_hat(Order+1:T-Order))
+
+Order=1000;
+
+plot(Order+1:T-Order,c(Order+1:T-Order),Order+1:T-Order,c_hat(Order+1:T-Order),'r:'),
+    legend('c','c hat'),
+    title('Order=10')
+Fig=gcf, PlotName=''
+    FileName=['PS4Q3d.png'];
+    set(Fig,'name',PlotName,'numbertitle','off');
+    print ('-dpng',FileName);
+

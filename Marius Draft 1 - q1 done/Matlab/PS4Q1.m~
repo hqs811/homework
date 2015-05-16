@@ -1,0 +1,163 @@
+%% Problemset 4, Question 1
+cd('/users/mariusring/Documents/Northwestern/520 FINC Todorov/PS 4/Matlab')
+clear all;
+clc;
+
+%% Q1 (c)
+phi=[0,0,0,0];
+omega=[1,1,0.01,0.01]
+alpha=[0,0,0.09,0.09]
+beta=[0,0,0.9,0.9]
+T=[100,1000,100,1000]
+P=4;
+Rejects=zeros(P,1);
+
+Reps=1000
+
+for i=1:P
+    Rejects(i)=0;
+    for rep=1:Reps
+        sigma2=zeros(T(i),1);
+        epsilon=zeros(T(i),1);
+        z=normrnd(0,1,T(i),1);
+        y=zeros(T(i),1);
+        
+
+        sigma2(1)=omega(i);
+        epsilon(1)=z(1)*sqrt(sigma2(1));
+        y(1)=epsilon(1);
+
+        for t=2:T(i)
+            sigma2(t)=omega(i)+alpha(i)*epsilon(t-1)^2+beta(i)*sigma2(t-1);
+            epsilon(t)=z(t)*sqrt(sigma2(t));
+            y(t)=phi(i)*y(t-1)+epsilon(t);
+        end
+
+        phi_hat= (y(1:end-1)'*y(1:end-1))\(y(1:end-1)'*y(2:end));
+
+        var=1;
+        tstat=sqrt(T(i))*phi_hat/sqrt(var);
+        
+        if abs(tstat)>1.96
+            Rejects(i)=Rejects(i)+1/Reps;
+        end
+    end
+end
+
+
+% OUTPUT
+    clear Output
+    Output=dataset()
+    Output.(1)={ 'A', 'B', 'C', 'D' }'
+    Output(1:4,2)=mat2dataset(floor(Rejects(1:4).*1000)/1000)
+    Output.Properties.VarNames={'Parameters','Rejections'}
+    FileName=['PS4Q1c' '.csv' ];
+    export(Output,'File',FileName,'Delimiter',',')
+    
+    
+    
+ %% Q1 dc)
+phi=[0,0,0.9,0.9,0.9,0.9];
+omega=[1,   0.01,  1,  0.01,   1,  0.01]
+alpha=[0,   0.09,  0,  0.09,   0,  0.09]
+beta =[0,   0.90,  0,  0.90,   0,  0.90]
+T    =[100,100,100,100,1000,1000]
+P=6;
+
+Reps=1000
+
+pMax=5
+
+AIC=zeros(pMax+1,1);
+BIC=zeros(pMax+1,1);
+
+AIC_dist=-99*ones(P,Reps);
+BIC_dist=-99*ones(P,Reps);
+
+for i=1:P
+    phi_hat=-999*ones(pMax,1);
+    sigma2_hat=-999*ones(pMax,1);
+    
+    AIC=zeros(pMax+1,1);
+    BIC=zeros(pMax+1,1);
+    
+    
+    for rep=1:Reps
+        % initializing simulation
+        sigma2=zeros(T(i),1);
+        epsilon=zeros(T(i),1);
+        z=normrnd(0,1,T(i),1);
+        y=zeros(T(i),1);
+        sigma2(1)=omega(i);
+        epsilon(1)=z(1)*sqrt(sigma2(1));
+        y(1)=epsilon(1);
+        
+        % going through time
+        for t=2:T(i)
+            sigma2(t)=omega(i)+alpha(i)*epsilon(t-1)^2+beta(i)*sigma2(t-1);
+            epsilon(t)=z(t)*sqrt(sigma2(t));
+            y(t)=phi(i)*y(t-1)+epsilon(t);
+        end
+        
+       
+       for p=0:pMax
+           X=[];
+           for j=1:p
+               X=[X y(1+p-j:end-j)];
+           end
+           
+           % X is a (T-p X p) matrix, with lags of y
+           if p>0
+               phi_hat= (X'*X)\X'*y(p+1:end);
+               T_hat=length(y(p+1:end));
+               mean_y_hat=mean(X*phi_hat);
+           
+               sigma2_hat(p+1) = mean((y(p+1:end)-X*phi_hat).^2);
+
+           else
+               T_hat=length(y(p+1:end));
+               sigma2_hat(p+1) = mean(y(p+1:end).^2);
+           end
+           AIC(p+1)=T_hat*log(sigma2_hat(p+1))+2*p;
+           BIC(p+1)=T_hat*log(sigma2_hat(p+1))+log(T_hat)*p;
+               
+           
+
+       end
+       [maxvalAIC, maxlocAIC]=max(-AIC);
+       [maxvalBIC, maxlocBIC]=max(-BIC);
+       
+       AIC_dist(i,rep)=maxlocAIC;
+       BIC_dist(i,rep)=maxlocBIC;
+    end
+end
+
+%%
+% OUTPUT
+    clear Output
+    Output=dataset()
+    Output.(1)={ 'A', 'C', 'E', 'F', 'G', 'H' }'
+    for i=1:P
+        tbl=zeros(5,3);
+        tbl2=tabulate(AIC_dist(i,:));
+        tbl(1:size(tbl2,1),1:size(tbl2,2))=tbl2;       % if count(p=5)==0
+        Output(i,1+1:1+pMax)=mat2dataset(tbl(:,3)'/100);
+    end
+    Output.Properties.VarNames={'Parameters','p1','p2','p3','p4','p5'}
+    FileName=['PS4Q1dAIC' '.csv' ];
+    export(Output,'File',FileName,'Delimiter',',')
+    
+ % OUTPUT
+    clear Output
+    Output=dataset();
+    Output.(1)={ 'A', 'C', 'E', 'F', 'G', 'H' }';
+    for i=1:P
+        tbl=zeros(6,3);
+        tbl2=tabulate(BIC_dist(i,:));
+        tbl(1:size(tbl2,1),1:size(tbl2,2))=tbl2;      % if count(p=5)==0
+        Output(i,1+1:1+pMax)=mat2dataset(tbl(:,3)'/100);
+    end
+    Output.Properties.VarNames={'Parameters','p1','p2','p3','p4','p5'}
+    FileName=['PS4Q1dBIC' '.csv' ];
+    export(Output,'File',FileName,'Delimiter',',')
+    
